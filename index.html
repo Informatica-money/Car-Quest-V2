@@ -1,3 +1,335 @@
+OPEN MILE — SOURCE CODE
+
+Save the HTML section as index.html and the JavaScript section as game3d.js in the same folder. Open index.html in a modern browser with internet access.
+
+============================================================
+FILE: index.html
+============================================================
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#dcecf0">
+  <title>Open Mile — a little road trip</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #23343a;
+      background: #dcecf0;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    button { font: inherit; }
+
+    .world, #view {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    #view { display: block; overflow: hidden; }
+    #view canvas { display: block; width: 100%; height: 100%; }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(28, 48, 57, .15), transparent 25%, transparent 73%, rgba(19, 31, 31, .3));
+    }
+
+    .topbar {
+      position: fixed;
+      inset: 24px 28px auto;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      pointer-events: none;
+    }
+
+    .brand, .readout, .icon-button, .speed-card, .distance-card, .hint, .mobile-controls button {
+      border: 1px solid rgba(255, 255, 255, .48);
+      background: rgba(248, 250, 246, .78);
+      box-shadow: 0 8px 32px rgba(34, 48, 45, .11);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 16px 11px 12px;
+      border-radius: 18px;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 38px;
+      height: 38px;
+      place-items: center;
+      border-radius: 13px;
+      color: #f9fff9;
+      background: #427966;
+    }
+
+    .brand-mark svg { width: 21px; height: 21px; }
+    .brand-name { font-weight: 750; letter-spacing: -.035em; }
+    .brand-caption { margin-top: 2px; color: #66766e; font-size: 11px; }
+
+    .top-actions {
+      display: flex;
+      gap: 9px;
+      pointer-events: auto;
+    }
+
+    .icon-button {
+      display: grid;
+      width: 46px;
+      height: 46px;
+      place-items: center;
+      border-radius: 15px;
+      color: #38564b;
+      cursor: pointer;
+      transition: transform .18s ease, background .18s ease;
+    }
+
+    .icon-button:hover { transform: translateY(-2px); background: #fff; }
+    .icon-button svg { width: 19px; height: 19px; }
+    .icon-button:focus-visible, button:focus-visible { outline: 3px solid #e8a65d; outline-offset: 3px; }
+
+    .readout {
+      position: fixed;
+      top: 94px;
+      left: 28px;
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 19px;
+    }
+
+    .readout-card { min-width: 90px; padding: 5px 10px; }
+    .eyebrow { color: #73827a; font-size: 9px; font-weight: 750; letter-spacing: .15em; text-transform: uppercase; }
+    .readout-value { margin-top: 4px; font-variant-numeric: tabular-nums; font-size: 16px; font-weight: 700; }
+
+    .dashboard {
+      position: fixed;
+      right: 28px;
+      bottom: 25px;
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+    }
+
+    .speed-card, .distance-card {
+      border-radius: 21px;
+      background: rgba(248, 250, 246, .87);
+    }
+
+    .speed-card { min-width: 156px; padding: 15px 19px 13px; }
+    .speed-line { display: flex; align-items: baseline; gap: 7px; }
+    .speed-number { font-size: 43px; font-weight: 760; letter-spacing: -.08em; line-height: 1; font-variant-numeric: tabular-nums; }
+    .speed-unit { color: #708078; font-size: 12px; font-weight: 650; }
+    .speed-caption { margin-top: 8px; color: #73827a; font-size: 10px; letter-spacing: .11em; text-transform: uppercase; }
+    .distance-card { min-width: 126px; padding: 14px 16px; }
+    .distance-card .readout-value { font-size: 17px; }
+
+    .hint {
+      position: fixed;
+      left: 28px;
+      bottom: 28px;
+      padding: 12px 15px;
+      border-radius: 16px;
+      color: #53665b;
+      font-size: 11px;
+    }
+
+    kbd {
+      display: inline-block;
+      min-width: 22px;
+      margin: 0 2px;
+      padding: 3px 5px;
+      border: 1px solid rgba(63, 86, 72, .18);
+      border-radius: 6px;
+      background: rgba(255,255,255,.62);
+      color: #38564b;
+      font: 700 10px ui-monospace, SFMono-Regular, Consolas, monospace;
+      text-align: center;
+    }
+
+    .mobile-controls { display: none; }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 4;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      background: rgba(24, 42, 42, .2);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      transition: opacity .25s ease, visibility .25s ease;
+    }
+
+    .overlay.is-hidden { visibility: hidden; opacity: 0; pointer-events: none; }
+
+    .welcome-card {
+      width: min(440px, 100%);
+      padding: 32px;
+      border: 1px solid rgba(255,255,255,.7);
+      border-radius: 28px;
+      background: rgba(249, 250, 245, .94);
+      box-shadow: 0 25px 85px rgba(24, 39, 38, .23);
+      text-align: center;
+    }
+
+    .sunrise-icon {
+      display: grid;
+      width: 62px;
+      height: 62px;
+      margin: 0 auto 18px;
+      place-items: center;
+      border-radius: 21px;
+      color: #fff;
+      background: #df9b5b;
+    }
+
+    .sunrise-icon svg { width: 31px; height: 31px; }
+    .welcome-kicker { color: #628072; font-size: 10px; font-weight: 750; letter-spacing: .18em; text-transform: uppercase; }
+    .welcome-card h1 { margin: 9px 0 10px; color: #283d38; font-size: clamp(30px, 6vw, 40px); letter-spacing: -.065em; line-height: 1.02; }
+    .welcome-copy { max-width: 330px; margin: 0 auto; color: #687871; font-size: 14px; line-height: 1.65; }
+    .start-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-width: 190px;
+      margin-top: 24px;
+      padding: 14px 21px;
+      border: 0;
+      border-radius: 14px;
+      background: #427966;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .18s ease, background .18s ease;
+    }
+
+    .start-button:hover { transform: translateY(-2px); background: #346653; }
+    .start-button svg { width: 17px; height: 17px; }
+    .welcome-footnote { margin-top: 16px; color: #87938d; font-size: 11px; }
+
+    [data-sky="evening"] .brand-mark { background: #7a6173; }
+    [data-sky="evening"] .icon-button { color: #62485d; }
+
+    @media (max-width: 620px) {
+      .topbar { inset: 14px 14px auto; }
+      .brand { gap: 9px; padding: 8px 12px 8px 8px; border-radius: 15px; }
+      .brand-mark { width: 34px; height: 34px; }
+      .brand-name { font-size: 13px; }
+      .brand-caption { font-size: 10px; }
+      .icon-button { width: 40px; height: 40px; border-radius: 13px; }
+      .readout { top: 70px; left: 14px; gap: 2px; padding: 8px; border-radius: 15px; }
+      .readout-card { min-width: 78px; padding: 4px 7px; }
+      .eyebrow { font-size: 8px; }
+      .readout-value { font-size: 14px; }
+      .dashboard { right: 14px; bottom: 17px; gap: 8px; }
+      .speed-card { min-width: 127px; padding: 12px 14px 11px; border-radius: 17px; }
+      .speed-number { font-size: 36px; }
+      .speed-caption { font-size: 9px; }
+      .distance-card { min-width: 97px; padding: 12px; border-radius: 17px; }
+      .distance-card .readout-value { font-size: 15px; }
+      .hint { display: none; }
+      .mobile-controls { position: fixed; inset: auto 14px 112px 14px; display: flex; justify-content: space-between; pointer-events: none; }
+      .mobile-controls button { display: grid; width: 57px; height: 57px; place-items: center; border-radius: 19px; color: #426756; font-size: 20px; font-weight: 750; pointer-events: auto; touch-action: none; user-select: none; }
+      .mobile-controls button[data-key="left"], .mobile-controls button[data-key="right"] { width: 49px; height: 49px; align-self: flex-end; }
+      .mobile-steering { display: flex; gap: 8px; }
+      .mobile-controls button.is-active { color: white; background: #427966; }
+      .welcome-card { padding: 27px 22px; border-radius: 24px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="world" id="world" data-sky="morning" aria-label="Open Mile scenic driving game">
+    <div id="view" aria-label="A winding road through hills and trees"></div>
+    <div class="vignette" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19c4-5 7-7 16-8M6 17l-2 2 3 .5M17 8l3 3-4 .5"/><path d="M8 14c1-3 2-6 2-10"/></svg>
+        </div>
+        <div><div class="brand-name">OPEN MILE</div><div class="brand-caption">a little room to roam</div></div>
+      </div>
+      <div class="top-actions">
+        <button class="icon-button" id="sky-button" type="button" aria-label="Change the light" title="Change the light">
+          <svg id="sky-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
+        </button>
+        <button class="icon-button" id="pause-button" type="button" aria-label="Pause the drive" title="Pause (P)">
+          <svg id="pause-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 5v14M15 5v14"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <section class="readout" aria-label="Trip information">
+      <div class="readout-card"><div class="eyebrow">Local time</div><div class="readout-value" id="clock">08:42</div></div>
+      <div class="readout-card"><div class="eyebrow">Along the way</div><div class="readout-value" id="landmark">Pine country</div></div>
+    </section>
+
+    <section class="dashboard" aria-label="Driving speed and distance">
+      <div class="distance-card"><div class="eyebrow">Wandered</div><div class="readout-value" id="distance">0.0 km</div></div>
+      <div class="speed-card"><div class="speed-line"><span class="speed-number" id="speed">0</span><span class="speed-unit">km/h</span></div><div class="speed-caption" id="drive-state">Parked for a moment</div></div>
+    </section>
+
+    <div class="hint"><kbd>W</kbd> or <kbd>↑</kbd> to roll &nbsp; <kbd>A</kbd> <kbd>D</kbd> to wander &nbsp; <kbd>C</kbd> camera &nbsp; <kbd>P</kbd> pause</div>
+
+    <div class="mobile-controls" aria-label="Touch driving controls">
+      <div class="mobile-steering"><button type="button" data-key="left" aria-label="Steer left">←</button><button type="button" data-key="right" aria-label="Steer right">→</button></div>
+      <button type="button" data-key="brake" aria-label="Slow down">−</button>
+      <button type="button" data-key="accelerate" aria-label="Accelerate">+</button>
+    </div>
+
+    <section class="overlay" id="overlay" aria-labelledby="overlay-title">
+      <div class="welcome-card">
+        <div class="sunrise-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18h18M5 15a7 7 0 0 1 14 0M12 3v2m-7 2 1.5 1.5M19 7l-1.5 1.5M2 11h2m16 0h2"/></svg></div>
+        <div class="welcome-kicker" id="overlay-kicker">No map. No rush.</div>
+        <h1 id="overlay-title">Take the long way.</h1>
+        <p class="welcome-copy" id="overlay-copy">A quiet, winding drive through a world that keeps unfolding. Find a comfortable speed and see what is around the next bend.</p>
+        <button class="start-button" id="overlay-action" type="button"><span id="action-label">Start your drive</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+        <div class="welcome-footnote" id="overlay-note">Just you, the road, and a little fresh air.</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+  <script src="game3d.js"></script>
+</body>
+</html>
+
+
+============================================================
+FILE: game3d.js
+============================================================
 (() => {
   "use strict";
 
