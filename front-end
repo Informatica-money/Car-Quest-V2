@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="nl" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NovaSync – Slim samenwerken voor teams en studenten</title>
+  <meta name="description" content="NovaSync brengt taken, notities en realtime teamplanning samen in één overzichtelijke werkruimte.">
+  
+  <!-- Google Fonts: Inter voor een strakke, moderne typografie -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Tailwind configuratie voor aangepaste lettertypes en subtiele animaties -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+          boxShadow: {
+            'soft': '0 10px 40px -10px rgba(30, 41, 59, 0.08)',
+            'glow': '0 20px 50px -12px rgba(79, 70, 229, 0.25)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Subtiele achtergrondgradient voor de hero-sectie */
+    .hero-gradient {
+      background: radial-gradient(circle at 50% 0%, rgba(79, 70, 229, 0.10) 0%, rgba(59, 130, 246, 0.04) 45%, rgba(248, 250, 252, 0) 75%);
+    }
+
+    /* Vloeiende overgangen voor interactieve kaarten */
+    .hover-lift {
+      transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .hover-lift:hover {
+      transform: translateY(-4px);
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans antialiased overflow-x-hidden selection:bg-indigo-600 selection:text-white">
+
+  <!-- ==================== 1. STICKY NAVIGATIEBALK ==================== -->
+  <header class="sticky top-0 z-50 bg-white/85 backdrop-blur-md border-b border-slate-200/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16 sm:h-20">
+        
+        <!-- Merklogo -->
+        <a href="#" class="flex items-center gap-2.5 group focus:outline-none">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-blue-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
+            <!-- Inline SVG Logo Icoon -->
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <span class="text-xl font-extrabold tracking-tight text-slate-900">
+            Nova<span class="text-indigo-600">Sync</span>
+          </span>
+        </a>
+
+        <!-- Desktop Navigatielinks -->
+        <nav class="hidden md:flex items-center gap-8" aria-label="Hoofdnavigatie">
+          <a href="#voordelen" class="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Voordelen</a>
+          <a href="#hoe-het-werkt" class="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Hoe het werkt</a>
+          <a href="#pakketten" class="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Pakketten</a>
+          <a href="#aanmelden" class="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Aanmelden</a>
+        </nav>
+
+        <!-- Desktop CTA Knop -->
+        <div class="hidden md:flex items-center gap-3">
+          <a href="#aanmelden" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-sm shadow-indigo-600/20 transition-all hover:shadow-md">
+            Start gratis
+          </a>
+        </div>
+
+        <!-- Mobiele Hamburger Knop (Touch-friendly formaat) -->
+        <button id="mobile-menu-btn" type="button" class="md:hidden inline-flex items-center justify-center p-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500" aria-controls="mobile-menu" aria-expanded="false">
+          <span class="sr-only">Open hoofdmenu</span>
+          <svg id="menu-icon-open" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+          <svg id="menu-icon-close" class="hidden w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Uitklapbaar Mobiel Menu -->
+    <div id="mobile-menu" class="hidden md:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-5 space-y-2 shadow-lg">
+      <a href="#voordelen" class="mobile-nav-link block px-3 py-3 rounded-xl text-base font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-600">Voordelen</a>
+      <a href="#hoe-het-werkt" class="mobile-nav-link block px-3 py-3 rounded-xl text-base font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-600">Hoe het werkt</a>
+      <a href="#pakketten" class="mobile-nav-link block px-3 py-3 rounded-xl text-base font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-600">Pakketten</a>
+      <a href="#aanmelden" class="mobile-nav-link block px-3 py-3 rounded-xl text-base font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-600">Aanmelden</a>
+      <div class="pt-2">
+        <a href="#aanmelden" class="mobile-nav-link block w-full text-center px-5 py-3 text-base font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-sm">
+          Vroege toegang aanvragen
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ==================== 2. HERO-SECTIE MET INTERACTIEVE PREVIEW ==================== -->
+    <section class="relative hero-gradient pt-12 pb-20 sm:pt-20 sm:pb-28">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Tekstuele Hero Inhoud -->
+        <div class="text-center max-w-3xl mx-auto">
+          <!-- Prototype v1.0 Badge -->
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-200/80 text-indigo-700 text-xs sm:text-sm font-semibold mb-6 shadow-xs">
+            <span class="relative flex h-2.5 w-2.5">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-600"></span>
+            </span>
+            Prototype v1.0 &bull; Nu beschikbaar voor vroege testers
+          </div>
+
+          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.12] mb-6">
+            Al je projecten, taken en teamnotities in <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600">één slimme flow.</span>
+          </h1>
+
+          <p class="text-lg sm:text-xl text-slate-600 leading-relaxed mb-8 sm:mb-10 max-w-2xl mx-auto">
+            NovaSync helpt projectteams en studenten om deadlines moeiteloos te halen. Geen losse documenten of eindeloze groepsapps meer — werk realtime samen vanuit één centraal dashboard.
+          </p>
+
+          <!-- Twee Actieknoppen -->
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a href="#aanmelden" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 text-base font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-lg shadow-indigo-600/25 transition-all hover:-translate-y-0.5">
+              <span>Vraag gratis toegang aan</span>
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </a>
+            <a href="#hoe-het-werkt" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 text-base font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl shadow-xs transition-all">
+              <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Bekijk hoe het werkt</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Interactieve Dashboard-Preview / Mockup -->
+        <div class="mt-12 sm:mt-16 max-w-5xl mx-auto">
+          <div class="bg-white rounded-2xl border border-slate-200/90 shadow-glow overflow-hidden">
+            
+            <!-- Browser / App Topbar -->
+            <div class="bg-slate-900 px-4 py-3 flex items-center justify-between border-b border-slate-800">
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-rose-500"></span>
+                <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+                <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+              </div>
+              <div class="hidden sm:flex items-center gap-2 bg-slate-800/90 text-slate-300 text-xs px-3.5 py-1 rounded-lg border border-slate-700">
+                <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <span>app.novasync.nl/werkruimte/sprint-1</span>
+              </div>
+              <span class="text-xs font-medium text-indigo-300 bg-indigo-950/80 border border-indigo-700/50 px-2.5 py-1 rounded-md">
+                Interactieve preview
+              </span>
+            </div>
+
+            <!-- Dashboard Werkruimte -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 bg-slate-50/70">
+              
+              <!-- Zijbalk van het prototype -->
+              <aside class="lg:col-span-3 bg-white border-b lg:border-b-0 lg:border-r border-slate-200/80 p-4 sm:p-5">
+                <div class="flex items-center justify-between lg:block mb-4">
+                  <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Werkruimte</p>
+                    <p class="text-sm font-bold text-slate-900 mt-0.5">GitHub Projectgroep A</p>
+                  </div>
+                  <span class="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full lg:mt-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 4 online
+                  </span>
+                </div>
+
+                <!-- Interactieve Tabbladen in de Mockup -->
+                <div class="flex lg:flex-col gap-1.5 overflow-x-auto pb-1 lg:pb-0" role="tablist">
+                  <button type="button" data-preview-tab="taken" class="preview-tab-btn flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold bg-indigo-50 text-indigo-700 transition-colors whitespace-nowrap">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+                    Sprint Taken
+                  </button>
+                  <button type="button" data-preview-tab="notities" class="preview-tab-btn flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors whitespace-nowrap">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                    Gedeelde Notities
+                  </button>
+                  <button type="button" data-preview-tab="team" class="preview-tab-btn flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors whitespace-nowrap">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    Teamleden (4)
+                  </button>
+                </div>
+              </aside>
+
+              <!-- Hoofdvenster van het prototype -->
+              <div class="lg:col-span-9 p-5 sm:p-7">
+                
+                <!-- Tab 1: Interactieve Takenlijst -->
+                <div id="preview-panel-taken" class="preview-panel">
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+                    <div>
+                      <h2 class="text-lg font-bold text-slate-900">Mijlpaal 1: Lancering &amp; GitHub Setup</h2>
+                      <p class="text-xs sm:text-sm text-slate-500">Klik op een taak hieronder om de live voortgang te testen</p>
+                    </div>
+                    <div class="flex items-center gap-3 bg-white px-3.5 py-2 rounded-xl border border-slate-200">
+                      <span class="text-xs font-semibold text-slate-600">Voortgang:</span>
+                      <span id="demo-progress-text" class="text-sm font-bold text-indigo-600">67%</span>
+                    </div>
+                  </div>
+
+                  <!-- Voortgangsbalk -->
+                  <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden mb-6">
+                    <div id="demo-progress-bar" class="h-full bg-gradient-to-r from-indigo-600 to-blue-500 rounded-full transition-all duration-300" style="width: 67%;"></div>
+                  </div>
+
+                  <!-- Klikbare demo-taken -->
+                  <div class="space-y-2.5" id="demo-task-list">
+                    <label class="demo-task flex items-center justify-between p-3.5 bg-white rounded-xl border border-slate-200 hover:border-indigo-300 cursor-pointer transition-all">
+                      <div class="flex items-center gap-3">
+                        <input type="checkbox" checked class="demo-checkbox w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+                        <span class="demo-task-label text-sm font-medium line-through text-slate-400">README.md en teamrollen inrichten op GitHub</span>
+                      </div>
+                      <span class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700">Manager</span>
+                    </label>
+
+                    <label class="demo-task flex items-center justify-between p-3.5 bg-white rounded-xl border border-slate-200 hover:border-indigo-300 cursor-pointer transition-all">
+                      <div class="flex items-center gap-3">
+                        <input type="checkbox" checked class="demo-checkbox w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+                        <span class="demo-task-label text-sm font-medium line-through text-slate-400">Prototype landingspagina (index.html) ontwerpen</span>
+                      </div>
+                      <span class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700">Marketing</span>
+                    </label>
+
+                    <label class="demo-task flex items-center justify-between p-3.5 bg-white rounded-xl border border-slate-200 hover:border-indigo-300 cursor-pointer transition-all">
+                      <div class="flex items-center gap-3">
+                        <input type="checkbox" class="demo-checkbox w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+                        <span class="demo-task-label text-sm font-medium text-slate-800">Eerste gebruikersfeedback verzamelen via early access</span>
+                      </div>
+                      <span class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700">Product</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Tab 2: Gedeelde Notities -->
+                <div id="preview-panel-notities" class="preview-panel hidden">
+                  <div class="bg-white rounded-xl border border-slate-200 p-5">
+                    <div class="flex items-center justify-between mb-3">
+                      <span class="text-xs font-semibold text-indigo-600 uppercase tracking-wider">Live Document &bull; Laatst bewerkt: zojuist</span>
+                      <span class="text-xs text-slate-400">Auto-opgeslagen</span>
+                    </div>
+                    <h3 class="text-base font-bold text-slate-900 mb-2">📌 Samenvatting Stand-up Meeting</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed mb-3">
+                      Het nieuwe ontwerp voor de landingspagina staat live in de repository. Deze week focussen we op het testen van de aanmeldstroom met mede-studenten en het aanscherpen van de pakketprijzen.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                      <span class="text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded-md font-medium">#lancering</span>
+                      <span class="text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded-md font-medium">#marketing-sprint</span>
+                      <span class="text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded-md font-medium">#v1-prototype</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tab 3: Teamleden Overzicht -->
+                <div id="preview-panel-team" class="preview-panel hidden">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="flex items-center gap-3 p-3.5 bg-white rounded-xl border border-slate-200">
+                      <div class="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 font-bold text-sm flex items-center justify-center">SM</div>
+                      <div>
+                        <p class="text-sm font-bold text-slate-900">Sanne Meijer</p>
+                        <p class="text-xs text-slate-500">Project Manager &bull; Online</p>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-3 p-3.5 bg-white rounded-xl border border-slate-200">
+                      <div class="w-9 h-9 rounded-full bg-blue-100 text-blue-700 font-bold text-sm flex items-center justify-center">LV</div>
+                      <div>
+                        <p class="text-sm font-bold text-slate-900">Lucas de Vries</p>
+                        <p class="text-xs text-slate-500">Marketing &amp; Groei &bull; Online</p>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-3 p-3.5 bg-white rounded-xl border border-slate-200">
+                      <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 font-bold text-sm flex items-center justify-center">AK</div>
+                      <div>
+                        <p class="text-sm font-bold text-slate-900">Amira Kader</p>
+                        <p class="text-xs text-slate-500">Lead Developer &bull; Online</p>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-3 p-3.5 bg-white rounded-xl border border-slate-200">
+                      <div class="w-9 h-9 rounded-full bg-purple-100 text-purple-700 font-bold text-sm flex items-center justify-center">TB</div>
+                      <div>
+                        <p class="text-sm font-bold text-slate-900">Thijs Bakker</p>
+                        <p class="text-xs text-slate-500">UI/UX Designer &bull; Online</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==================== 3. KERNVOORDELEN (3 KAARTEN MET SVG) ==================== -->
+    <section id="voordelen" class="py-20 sm:py-28 bg-white border-t border-slate-200/70">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="text-center max-w-2xl mx-auto mb-14 sm:mb-16">
+          <span class="text-xs font-bold uppercase tracking-widest text-indigo-600">Waarom NovaSync</span>
+          <h2 class="mt-2 text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+            Gebouwd voor snelheid, focus en helder overzicht
+          </h2>
+          <p class="mt-4 text-base sm:text-lg text-slate-600">
+            Geen ingewikkelde instellingen of rommelige menu’s. Alles wat je team nodig heeft om direct productief te starten.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          
+          <!-- Voordeel 1 -->
+          <div class="hover-lift bg-slate-50/80 rounded-2xl p-7 sm:p-8 border border-slate-200/80 shadow-soft">
+            <div class="w-12 h-12 rounded-xl bg-indigo-600 text-white flex items-center justify-center mb-6 shadow-md shadow-indigo-600/20">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-3">Realtime Synchronisatie</h3>
+            <p class="text-slate-600 leading-relaxed">
+              Elke wijziging in taken, checklists of notities is binnen een fractie van een seconde zichtbaar voor het hele team, op laptop én mobiel.
+            </p>
+          </div>
+
+          <!-- Voordeel 2 -->
+          <div class="hover-lift bg-slate-50/80 rounded-2xl p-7 sm:p-8 border border-slate-200/80 shadow-soft">
+            <div class="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center mb-6 shadow-md shadow-blue-600/20">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-3">Slimme Mijlpaal-inzichten</h3>
+            <p class="text-slate-600 leading-relaxed">
+              Zie in één oogopslag wie waar mee bezig is en hoeveel procent van jullie sprint of opdracht al is afgerond, zonder extra vergaderingen.
+            </p>
+          </div>
+
+          <!-- Voordeel 3 -->
+          <div class="hover-lift bg-slate-50/80 rounded-2xl p-7 sm:p-8 border border-slate-200/80 shadow-soft">
+            <div class="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center mb-6 shadow-md shadow-slate-900/20">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-3">GitHub &amp; Tool Integratie</h3>
+            <p class="text-slate-600 leading-relaxed">
+              Koppel eenvoudig jullie GitHub-issues, pull requests en documenten zodat code en planning altijd netjes met elkaar verbonden blijven.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 4. HOE HET WERKT (3 STAPPEN) ==================== -->
+    <section id="hoe-het-werkt" class="py-20 sm:py-28 bg-slate-50 border-t border-slate-200/70">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="text-center max-w-2xl mx-auto mb-16">
+          <span class="text-xs font-bold uppercase tracking-widest text-indigo-600">In 3 stappen live</span>
+          <h2 class="mt-2 text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+            Hoe NovaSync werkt
+          </h2>
+          <p class="mt-4 text-base sm:text-lg text-slate-600">
+            Binnen twee minuten heb je een complete werkruimte ingericht voor je projectgroep of bedrijf.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+          
+          <!-- Stap 1 -->
+          <div class="bg-white rounded-2xl p-8 border border-slate-200/90 shadow-soft relative">
+            <div class="w-11 h-11 rounded-full bg-indigo-600 text-white font-extrabold text-lg flex items-center justify-center mb-6 shadow-sm">
+              1
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-2">Maak een werkruimte aan</h3>
+            <p class="text-slate-600 leading-relaxed">
+              Kies een naam voor je project, selecteer een kant-en-klaar sjabloon (zoals Studieproject of Software Sprint) en stel je doelen in.
+            </p>
+          </div>
+
+          <!-- Stap 2 -->
+          <div class="bg-white rounded-2xl p-8 border border-slate-200/90 shadow-soft relative">
+            <div class="w-11 h-11 rounded-full bg-indigo-600 text-white font-extrabold text-lg flex items-center justify-center mb-6 shadow-sm">
+              2
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-2">Nodig je teamleden uit</h3>
+            <p class="text-slate-600 leading-relaxed">
+              Deel één uitnodigingslink met je teamgenoten, wijs rollen toe zoals Manager, Developer of Marketing en verdeel de eerste taken.
+            </p>
+          </div>
+
+          <!-- Stap 3 -->
+          <div class="bg-white rounded-2xl p-8 border border-slate-200/90 shadow-soft relative">
+            <div class="w-11 h-11 rounded-full bg-indigo-600 text-white font-extrabold text-lg flex items-center justify-center mb-6 shadow-sm">
+              3
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-2">Werk samen &amp; lever op tijd op</h3>
+            <p class="text-slate-600 leading-relaxed">
+              Vink taken af, deel updates in realtime en houd elke deadline moeiteloos onder controle tot aan de eindpresentatie.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 5. PRIJZEN / PAKKETTEN MET INTERACTIEVE TOGGLE ==================== -->
+    <section id="pakketten" class="py-20 sm:py-28 bg-white border-t border-slate-200/70">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="text-center max-w-2xl mx-auto mb-10">
+          <span class="text-xs font-bold uppercase tracking-widest text-indigo-600">Transparante pakketten</span>
+          <h2 class="mt-2 text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+            Kies het pakket dat bij jullie past
+          </h2>
+          <p class="mt-4 text-base sm:text-lg text-slate-600">
+            Start gratis met je studiegroep of schaal door met uitgebreide teamfuncties.
+          </p>
+
+          <!-- Interactieve Toggle: Maandelijks vs. Jaarlijks -->
+          <div class="mt-8 inline-flex items-center gap-3.5 bg-slate-100 p-2 rounded-2xl border border-slate-200/80">
+            <span id="label-monthly" class="text-sm font-bold text-slate-900 pl-2 transition-colors">Maandelijks</span>
+            
+            <button id="billing-toggle" type="button" role="switch" aria-checked="false" aria-label="Schakel tussen maandelijks en jaarlijks betalen" class="relative inline-flex h-7 w-13 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-slate-300 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2" style="width: 52px;">
+              <span id="billing-toggle-knob" class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out translate-x-0"></span>
+            </button>
+            
+            <div class="flex items-center gap-1.5 pr-2">
+              <span id="label-yearly" class="text-sm font-medium text-slate-500 transition-colors">Jaarlijks</span>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                -20%
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3 Pakketkaarten -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch mt-10">
+          
+          <!-- Pakket 1: Gratis -->
+          <div class="hover-lift flex flex-col justify-between bg-slate-50/70 rounded-2xl p-8 border border-slate-200 shadow-soft">
+            <div>
+              <h3 class="text-xl font-bold text-slate-900">Gratis</h3>
+              <p class="text-sm text-slate-500 mt-1">Ideaal voor studenten &amp; kleine projecten</p>
+              
+              <div class="mt-6 flex items-baseline gap-1">
+                <span class="text-4xl font-extrabold text-slate-900 price-amount" data-monthly="0" data-yearly="0">€0</span>
+                <span class="text-sm font-medium text-slate-500">/ maand</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1 billing-note">Altijd gratis te gebruiken</p>
+
+              <ul class="mt-7 space-y-3.5 text-sm text-slate-700">
+                <li class="flex items-center gap-3">
+                  <svg class="w-5 h-5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  Tot 5 teamleden per werkruimte
+                </li>
+                <li class="flex items-center gap-3">
+                  <svg class="w-5 h-5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  3 actieve projectborden
+                </li>
+                <li class="flex items-center gap-3">
+                  <svg class="w-5 h-5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  Basis GitHub-koppeling
+                </li>
+                <li class="flex items-center gap-3">
+                  <svg class="w-5 h-5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  Gedeelde notities &amp; checklists
+                </li>
+              </ul>
+            </div>
+
+            <button type="button" data-select-plan="Gratis" class="select-plan-btn mt-8 w-full py-3 px-5 rounded-xl text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/80 transition-colors">
+              Start met Gratis
+            </button>
+          </div>
+
+          <!-- Pakket 2: Pro (Uitgelicht) -->
+          <div class="hover-lift flex flex-col justify-between bg-slate-900 text-white rounded-2xl p-8 border-2 border-indigo-500 shadow-glow relative">
+            <div class="absolute -top-3.5 right-6 bg-gradient-to-r from-indigo-500 to-blue-500 text-white text-xs font-bold uppercase tracking-wider px-3.5 py-1 rounded-full shadow-md">
+              Meest gekozen
+            </div>
+
+            <div>
+              <h3 class="text-xl font-bold text-white">Pro</h3>
+              <p class="text-sm text-slate-300 mt-1">Voor ambitieuze teams &amp; startups</p>
+              
+              <div class="mt-6 flex items-baseline gap-1">
+                <span class="text-4xl font-extrabold text-white price-amount" data-monthly="9" data-yearly="7">€9</span>
+                <span class="text-sm font-medium text-slate-300">/ maand</span>
+              </div>
+              <p class="text-xs text-indigo-300 mt-1 billing-note">Maandelijks opzegbaar</p>
+
+              <ul class="mt-7 space-y-3.5 text-sm text-slate-200">
+                <li class="flex items-center gap-3">
+                  <svg class="w-5 h-5 text-indigo-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  Tot 20 teamleden
+                </li>
+                <li class="flex items-center gap-3">
+                  <svg class="w-5 h-5 text-indigo-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  Onbeperkt aantal projecten
+                </li>
+                <li class="flex items-center gap-3">
+                  <svg class="w-5 h-5 text-indigo-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  Automatische GitHub PR &amp; Issue sync
+                </li>
+                <li class="flex items-center gap-3">
+                  <svg class="w-5 h-5 text-indigo-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  Tijdlijn &amp; mijlpaal-rapportages
+                </li>
+              </ul>
+            </div>
+
+            <button type="button" data-select-plan="Pro" class="select-plan-btn mt-8 w-full py-3.5 px-5 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-600/30 transition-colors">
+              Kies Pro-pakket
+            </button>
+          </div>
+
+          <!-- Pakket 3: Team -->
+          <div class="hover-lift flex flex-col justify-between bg-slate-50/70 rounded-2xl p-8 border border-slate-200 shadow-soft">
+            <div>
+              <h3 class="text-xl font-bold text-slate-900">Team</h3>
+              <p class="text-sm text-slate-500 mt-1">Voor grotere organisaties &amp; opleidingen</p>
+              
+              <div class="mt-6 flex items-baseline gap-1">
+                <span class="text-4xl font-extrabold text-slate-900 price-amount" data-monthly="24" data-yearly="19">€24</span>
+                <span class="text-sm font-medium text-slate-500">/ maand</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1 billing-note">Maandelijks opzegbaar</p>
+
+              <ul class="mt-7 space-y-3.5 text-sm text-slate-700">
+                <li class="flex items-center gap-3">
+                  <svg class="w-5 h-5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  Onbeperkt aantal teamleden
+                </li>
+                <li class="flex items-center gap-3">
+                  <svg class="w-5 h-5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  Meerdere afdelingen &amp; rechtenbeheer
+                </li>
+                <li class="flex items-center gap-3">
+                  <svg class="w-5 h-5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  Persoonlijke onboarding &amp; support
+                </li>
+                <li class="flex items-center gap-3">
+                  <svg class="w-5 h-5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  Exporteerbare voortgangsrapporten
+                </li>
+              </ul>
+            </div>
+
+            <button type="button" data-select-plan="Team" class="select-plan-btn mt-8 w-full py-3 px-5 rounded-xl text-sm font-semibold text-slate-800 bg-white hover:bg-slate-100 border border-slate-300 transition-colors">
+              Kies Team-pakket
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 6. AANMELDFORMULIER VROEGE TOEGANG ==================== -->
+    <section id="aanmelden" class="py-20 sm:py-28 bg-slate-50 border-t border-slate-200/70">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-gradient-to-br from-indigo-600 via-indigo-700 to-blue-700 rounded-3xl p-6 sm:p-12 shadow-glow text-white overflow-hidden relative">
+          
+          <div class="max-w-2xl mx-auto text-center mb-8">
+            <span class="inline-block px-3 py-1 rounded-full bg-white/15 text-indigo-100 text-xs font-semibold tracking-wide uppercase mb-3">
+              Early Access &bull; Beperkte plekken
+            </span>
+            <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight">
+              Krijg als eerste toegang tot NovaSync
+            </h2>
+            <p class="mt-3 text-indigo-100 text-base sm:text-lg">
+              Meld je vrijblijvend aan voor de bètaversie en ontvang direct een uitnodigingslink voor jouw team.
+            </p>
+          </div>
+
+          <!-- Formulier Container -->
+          <div class="max-w-xl mx-auto bg-white text-slate-900 rounded-2xl p-6 sm:p-8 shadow-xl">
+            
+            <!-- Melding wanneer een pakket vanaf de prijzen-sectie is aangeklikt -->
+            <div id="plan-selected-banner" class="hidden mb-5 p-3 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs sm:text-sm font-medium flex items-center justify-between">
+              <span id="plan-selected-text">Pakket geselecteerd: Pro</span>
+              <button type="button" id="close-plan-banner" class="text-indigo-600 hover:text-indigo-900 font-bold px-1.5">&times;</button>
+            </div>
+
+            <!-- Het Aanmeldformulier -->
+            <form id="early-access-form" novalidate class="space-y-4">
+              
+              <div>
+                <label for="full-name" class="block text-sm font-semibold text-slate-700 mb-1.5">Volledige naam *</label>
+                <input type="text" id="full-name" name="fullName" placeholder="Bijv. Daan van Dijk" required
+                  class="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all">
+                <p id="error-name" class="hidden mt-1.5 text-xs font-medium text-rose-600">Vul alstublieft je naam in (minimaal 2 tekens).</p>
+              </div>
+
+              <div>
+                <label for="email-address" class="block text-sm font-semibold text-slate-700 mb-1.5">E-mailadres *</label>
+                <input type="email" id="email-address" name="email" placeholder="naam@voorbeeld.nl" required
+                  class="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all">
+                <p id="error-email" class="hidden mt-1.5 text-xs font-medium text-rose-600">Vul een geldig e-mailadres in.</p>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label for="user-role" class="block text-sm font-semibold text-slate-700 mb-1.5">Ik gebruik NovaSync voor</label>
+                  <select id="user-role" name="role" class="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent">
+                    <option value="Student / Projectgroep">Student / Projectgroep</option>
+                    <option value="Startup / Bedrijf">Startup / Bedrijf</option>
+                    <option value="Docent / Onderwijs">Docent / Onderwijs</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label for="selected-plan" class="block text-sm font-semibold text-slate-700 mb-1.5">Gewenst pakket</label>
+                  <select id="selected-plan" name="plan" class="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent">
+                    <option value="Gratis">Gratis (€0/mnd)</option>
+                    <option value="Pro" selected>Pro (Meest gekozen)</option>
+                    <option value="Team">Team (Organisaties)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="pt-2">
+                <button type="submit" class="w-full py-3.5 px-6 rounded-xl text-base font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-600/25 transition-all hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600">
+                  Meld mij aan voor vroege toegang
+                </button>
+              </div>
+              <p class="text-xs text-center text-slate-500">
+                Geen spam. Je ontvangt alleen updates over de lancering van NovaSync.
+              </p>
+            </form>
+
+            <!-- Directe Bevestigingsmelding na verzenden -->
+            <div id="form-success-box" class="hidden text-center py-6 space-y-4">
+              <div class="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 class="text-2xl font-extrabold text-slate-900">Je staat op de lijst!</h3>
+              <p id="success-message-text" class="text-sm sm:text-base text-slate-600 leading-relaxed max-w-md mx-auto">
+                Bedankt voor je aanmelding. We hebben een bevestiging gestuurd naar jouw e-mailadres.
+              </p>
+              <div class="pt-2">
+                <button type="button" id="reset-form-btn" class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl text-sm font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors">
+                  Nog een teamlid aanmelden
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ==================== 7. FOOTER ==================== -->
+  <footer class="bg-white border-t border-slate-200 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        
+        <!-- Logo & Korte Tagline -->
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <span class="text-lg font-extrabold text-slate-900">Nova<span class="text-indigo-600">Sync</span></span>
+          <span class="text-xs text-slate-400 ml-2 hidden sm:inline">| Marketing Prototype v1.0</span>
+        </div>
+
+        <!-- Footer Navigatielinks -->
+        <div class="flex flex-wrap justify-center gap-6 text-sm font-medium text-slate-600">
+          <a href="#voordelen" class="hover:text-indigo-600 transition-colors">Voordelen</a>
+          <a href="#hoe-het-werkt" class="hover:text-indigo-600 transition-colors">Hoe het werkt</a>
+          <a href="#pakketten" class="hover:text-indigo-600 transition-colors">Pakketten</a>
+          <a href="#aanmelden" class="hover:text-indigo-600 transition-colors">Aanmelden</a>
+        </div>
+
+        <!-- Copyright -->
+        <p class="text-sm text-slate-500 text-center md:text-right">
+          &copy; 2026 NovaSync Projectteam. Alle rechten voorbehouden.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== JAVASCRIPT INTERACTIVITEIT ==================== -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        /* -----------------------------------------------------------
+         * 1. Mobiel Navigatiemenu Toggle
+         * ----------------------------------------------------------- */
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const menuIconOpen = document.getElementById('menu-icon-open');
+        const menuIconClose = document.getElementById('menu-icon-close');
+        const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+
+        function toggleMobileMenu(forceClose = false) {
+          const isCurrentlyOpen = !mobileMenu.classList.contains('hidden');
+          const shouldOpen = forceClose ? false : !isCurrentlyOpen;
+
+          mobileMenu.classList.toggle('hidden', !shouldOpen);
+          menuIconOpen.classList.toggle('hidden', shouldOpen);
+          menuIconClose.classList.toggle('hidden', !shouldOpen);
+          mobileMenuBtn.setAttribute('aria-expanded', String(shouldOpen));
+        }
+
+        if (mobileMenuBtn) {
+          mobileMenuBtn.addEventListener('click', () => toggleMobileMenu());
+        }
+
+        mobileNavLinks.forEach(link => {
+          link.addEventListener('click', () => toggleMobileMenu(true));
+        });
+
+        /* -----------------------------------------------------------
+         * 2. Interactieve Dashboard-Preview in de Hero-sectie
+         * ----------------------------------------------------------- */
+        const previewTabBtns = document.querySelectorAll('.preview-tab-btn');
+        const previewPanels = document.querySelectorAll('.preview-panel');
+
+        previewTabBtns.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const targetTab = btn.getAttribute('data-preview-tab');
+
+            // Reset stijlen van alle tabknoppen
+            previewTabBtns.forEach(b => {
+              b.classList.remove('bg-indigo-50', 'text-indigo-700', 'font-semibold');
+              b.classList.add('text-slate-600', 'font-medium');
+            });
+
+            // Activeer aangeklikte tabknop
+            btn.classList.add('bg-indigo-50', 'text-indigo-700', 'font-semibold');
+            btn.classList.remove('text-slate-600', 'font-medium');
+
+            // Toon juiste paneel
+            previewPanels.forEach(panel => {
+              panel.classList.toggle('hidden', panel.id !== `preview-panel-${targetTab}`);
+            });
+          });
+        });
+
+        // Live voortgangsbalk bij afvinken van demo-taken
+        const demoCheckboxes = document.querySelectorAll('.demo-checkbox');
+        const demoProgressText = document.getElementById('demo-progress-text');
+        const demoProgressBar = document.getElementById('demo-progress-bar');
+
+        function updateDemoProgress() {
+          const total = demoCheckboxes.length;
+          let checkedCount = 0;
+
+          demoCheckboxes.forEach(cb => {
+            const labelText = cb.closest('.demo-task').querySelector('.demo-task-label');
+            if (cb.checked) {
+              checkedCount++;
+              labelText.classList.add('line-through', 'text-slate-400');
+              labelText.classList.remove('text-slate-800');
+            } else {
+              labelText.classList.remove('line-through', 'text-slate-400');
+              labelText.classList.add('text-slate-800');
+            }
+          });
+
+          const percentage = total > 0 ? Math.round((checkedCount / total) * 100) : 0;
+          if (demoProgressText) demoProgressText.textContent = `${percentage}%`;
+          if (demoProgressBar) demoProgressBar.style.width = `${percentage}%`;
+        }
+
+        demoCheckboxes.forEach(cb => {
+          cb.addEventListener('change', updateDemoProgress);
+        });
+
+        /* -----------------------------------------------------------
+         * 3. Interactieve Prijzen Toggle (Maandelijks vs. Jaarlijks)
+         * ----------------------------------------------------------- */
+        const billingToggle = document.getElementById('billing-toggle');
+        const billingKnob = document.getElementById('billing-toggle-knob');
+        const labelMonthly = document.getElementById('label-monthly');
+        const labelYearly = document.getElementById('label-yearly');
+        const priceAmounts = document.querySelectorAll('.price-amount');
+        const billingNotes = document.querySelectorAll('.billing-note');
+
+        let isYearly = false;
+
+        if (billingToggle) {
+          billingToggle.addEventListener('click', () => {
+            isYearly = !isYearly;
+            billingToggle.setAttribute('aria-checked', String(isYearly));
+
+            // Wissel knop-positie en achtergrondkleur
+            if (isYearly) {
+              billingToggle.classList.remove('bg-slate-300');
+              billingToggle.classList.add('bg-indigo-600');
+              billingKnob.classList.remove('translate-x-0');
+              billingKnob.classList.add('translate-x-6');
+
+              labelYearly.classList.add('font-bold', 'text-slate-900');
+              labelYearly.classList.remove('font-medium', 'text-slate-500');
+              labelMonthly.classList.remove('font-bold', 'text-slate-900');
+              labelMonthly.classList.add('font-medium', 'text-slate-500');
+            } else {
+              billingToggle.classList.add('bg-slate-300');
+              billingToggle.classList.remove('bg-indigo-600');
+              billingKnob.classList.add('translate-x-0');
+              billingKnob.classList.remove('translate-x-6');
+
+              labelMonthly.classList.add('font-bold', 'text-slate-900');
+              labelMonthly.classList.remove('font-medium', 'text-slate-500');
+              labelYearly.classList.remove('font-bold', 'text-slate-900');
+              labelYearly.classList.add('font-medium', 'text-slate-500');
+            }
+
+            // Update bedragen en facturatietekst
+            priceAmounts.forEach(el => {
+              const newPrice = isYearly ? el.getAttribute('data-yearly') : el.getAttribute('data-monthly');
+              el.textContent = `€${newPrice}`;
+            });
+
+            billingNotes.forEach((note, index) => {
+              if (index === 0) {
+                note.textContent = 'Altijd gratis te gebruiken';
+              } else {
+                note.textContent = isYearly ? 'Jaarlijks gefactureerd (20% korting)' : 'Maandelijks opzegbaar';
+              }
+            });
+          });
+        }
+
+        // Pakket-knoppen koppelen aan het aanmeldformulier
+        const selectPlanBtns = document.querySelectorAll('.select-plan-btn');
+        const selectedPlanDropdown = document.getElementById('selected-plan');
+        const planBanner = document.getElementById('plan-selected-banner');
+        const planBannerText = document.getElementById('plan-selected-text');
+        const closePlanBanner = document.getElementById('close-plan-banner');
+        const signupSection = document.getElementById('aanmelden');
+
+        selectPlanBtns.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const chosenPlan = btn.getAttribute('data-select-plan');
+            if (selectedPlanDropdown) {
+              selectedPlanDropdown.value = chosenPlan;
+            }
+            if (planBanner && planBannerText) {
+              const periodLabel = chosenPlan === 'Gratis' ? '' : (isYearly ? ' (Jaarlijks)' : ' (Maandelijks)');
+              planBannerText.textContent = `Gekozen pakket: ${chosenPlan}${periodLabel}`;
+              planBanner.classList.remove('hidden');
+            }
+            if (signupSection) {
+              signupSection.scrollIntoView({ behavior: 'smooth' });
+            }
+          });
+        });
+
+        if (closePlanBanner && planBanner) {
+          closePlanBanner.addEventListener('click', () => {
+            planBanner.classList.add('hidden');
+          });
+        }
+
+        /* -----------------------------------------------------------
+         * 4. Validatie & Bevestiging van het Early Access Formulier
+         * ----------------------------------------------------------- */
+        const earlyAccessForm = document.getElementById('early-access-form');
+        const nameInput = document.getElementById('full-name');
+        const emailInput = document.getElementById('email-address');
+        const roleSelect = document.getElementById('user-role');
+        const errorName = document.getElementById('error-name');
+        const errorEmail = document.getElementById('error-email');
+        const successBox = document.getElementById('form-success-box');
+        const successMessageText = document.getElementById('success-message-text');
+        const resetFormBtn = document.getElementById('reset-form-btn');
+
+        function isValidEmail(email) {
+          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        if (earlyAccessForm) {
+          earlyAccessForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const nameVal = nameInput.value.trim();
+            const emailVal = emailInput.value.trim();
+            let isFormValid = true;
+
+            // Valideer naam
+            if (nameVal.length < 2) {
+              errorName.classList.remove('hidden');
+              nameInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
+              isFormValid = false;
+            } else {
+              errorName.classList.add('hidden');
+              nameInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+            }
+
+            // Valideer e-mailadres
+            if (!isValidEmail(emailVal)) {
+              errorEmail.classList.remove('hidden');
+              emailInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
+              isFormValid = false;
+            } else {
+              errorEmail.classList.add('hidden');
+              emailInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+            }
+
+            if (!isFormValid) return;
+
+            // Toon persoonlijke bevestigingsmelding
+            const chosenRole = roleSelect ? roleSelect.value : 'Team';
+            const chosenPlan = selectedPlanDropdown ? selectedPlanDropdown.value : 'Pro';
+
+            successMessageText.innerHTML = `Bedankt, <strong>${escapeHtml(nameVal)}</strong>! We hebben een uitnodiging voor het <strong>${escapeHtml(chosenPlan)}</strong>-pakket (${escapeHtml(chosenRole)}) klaargezet voor <strong>${escapeHtml(emailVal)}</strong>.`;
+
+            earlyAccessForm.classList.add('hidden');
+            if (planBanner) planBanner.classList.add('hidden');
+            successBox.classList.remove('hidden');
+          });
+        }
+
+        // Resetknop om nog een persoon aan te melden
+        if (resetFormBtn) {
+          resetFormBtn.addEventListener('click', () => {
+            earlyAccessForm.reset();
+            successBox.classList.add('hidden');
+            earlyAccessForm.classList.remove('hidden');
+          });
+        }
+
+        // Hulpfunctie om XSS bij gebruikersinvoer te voorkomen
+        function escapeHtml(str) {
+          const div = document.createElement('div');
+          div.textContent = str;
+          return div.innerHTML;
+        }
+      } catch (err) {
+        console.error('Fout tijdens initialiseren van de landingspagina:', err);
+      }
+    });
+  </script>
+</body>
+</html>
