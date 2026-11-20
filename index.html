@@ -218,10 +218,6 @@
 
     <!-- Canvas Container -->
     <div id="canvas-container" class="w-full h-full absolute top-0 left-0"></div>
-    <div id="engine-warning" class="hidden absolute top-24 left-1/2 -translate-x-1/2 z-30 glass-panel border border-rose-400/50 text-white px-5 py-3 rounded-2xl shadow-2xl pointer-events-auto text-center">
-        <div class="font-bold text-rose-300"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Motor vastgelopen door water</div>
-        <div class="text-xs text-slate-200 mt-1">Reset de auto om de motor opnieuw te starten.</div>
-    </div>
     <a id="feedback-link" href="https://docs.google.com/forms/d/e/1FAIpQLSfYSY72NKikcPQl8kgIUoOjlHv_bLrTwoPpgvTkqPzrgI0LbA/viewform" target="_blank" rel="noopener noreferrer" class="hidden absolute top-24 right-6 z-30 glass-panel border border-sky-400/40 text-sky-200 hover:text-white px-4 py-3 rounded-2xl shadow-xl pointer-events-auto text-sm font-bold">
         <i class="fa-solid fa-comment-dots mr-2"></i>Geef feedback
     </a>
@@ -693,7 +689,6 @@
         const worldChunks = new Map();
         let terrainMaterial;
         let roadMaterial;
-        let riverMaterial;
         let roadPool = [];
         let streamedRoadSegments = new Map();
         let roadWaypoints = [];
@@ -703,7 +698,6 @@
         let treeGeometry, trunkGeometry, treeMaterial, trunkMaterial;
         const SPAWN_POSITION = new THREE.Vector3(0, 0, 0);
         let lastCollisionSoundTime = 0;
-        let isHydrolocked = false;
         let answeredQuestionCount = 0;
         let gameStarted = false;
         let selectedCarType = 'hatchback';
@@ -1011,34 +1005,11 @@
             );
             const ridges = 1 - Math.abs(noise2D(x * 0.0014, z * 0.0014));
             const mountains = mountainMask * (12 + ridges * 62);
-            const naturalHeight = broadLand + hills + mountains;
-
-            const riverDistance = Math.abs(x - getRiverCenterX(z));
-            const riverCut = 1 - THREE.MathUtils.smoothstep(riverDistance, 7, 42);
-            const riverBed = getRiverWaterHeight(z) - 2.2;
-            return THREE.MathUtils.lerp(naturalHeight, riverBed, riverCut);
+            return broadLand + hills + mountains;
         }
 
         function routeRandom(index, salt) {
             return hashNoise(index * 31 + salt, WORLD_SEED);
-        }
-
-        function getRiverCenterX(z) {
-            return noise1D(z / 560 + 182.4) * 74 + noise1D(z / 190 + 73.1) * 14;
-        }
-
-        function getRiverWaterHeight(z) {
-            return noise1D(z / 1100 + 251.7) * 2.5;
-        }
-
-        function getRiverInfo(x, z) {
-            const centerX = getRiverCenterX(z);
-            return {
-                centerX,
-                distance: Math.abs(x - centerX),
-                halfWidth: 12,
-                waterHeight: getRiverWaterHeight(z)
-            };
         }
 
         function createRoadSystem() {
@@ -1083,21 +1054,14 @@
             }
 
             const heading = THREE.MathUtils.clamp(previous.heading + turn, -1.05, 1.05);
-            let grade;
-            if (phase < 5 || (phase >= 11 && phase < 14)) {
-                grade = routeRandom(index, 2310) * 0.012;
-            } else if (phase < 11) {
-                grade = 0.035 + routeRandom(index, 2710) * 0.02;
-            } else if (phase < 20) {
-                grade = -0.035 + routeRandom(index, 3110) * 0.02;
-            } else {
-                grade = routeRandom(index, 3510) * 0.085;
-            }
+            const nextX = previous.x + Math.sin(heading) * ROAD_SEGMENT_LENGTH;
+            const nextZ = previous.z - Math.cos(heading) * ROAD_SEGMENT_LENGTH;
+            const terrainHeight = getRawTerrainHeight(nextX, nextZ);
 
             roadWaypoints.push({
-                x: previous.x + Math.sin(heading) * ROAD_SEGMENT_LENGTH,
-                y: previous.y + grade * ROAD_SEGMENT_LENGTH,
-                z: previous.z - Math.cos(heading) * ROAD_SEGMENT_LENGTH,
+                x: nextX,
+                y: terrainHeight,
+                z: nextZ,
                 heading
             });
         }
@@ -1290,14 +1254,6 @@
                 roughness: 0.9,
                 metalness: 0.1
             });
-            riverMaterial = new THREE.MeshStandardMaterial({
-                color: 0x3e9dbd,
-                roughness: 0.24,
-                metalness: 0.08,
-                transparent: true,
-                opacity: 0.9,
-                side: THREE.DoubleSide
-            });
         }
 
         function createEducationalObjects() {
@@ -1325,7 +1281,6 @@
                 const worldX = chunkX * CHUNK_SIZE - CHUNK_SIZE * 0.5 + localX;
                 const worldZ = chunkZ * CHUNK_SIZE - CHUNK_SIZE * 0.5 + localZ;
                 if (getNearestRoadPoint(worldX, worldZ).distance < ROAD_WIDTH * 0.5 + 5) continue;
-                if (getRiverInfo(worldX, worldZ).distance < 18) continue;
                 if (Math.hypot(worldX - SPAWN_POSITION.x, worldZ - SPAWN_POSITION.z) < 9) continue;
                 const groundY = getTerrainHeight(worldX, worldZ);
                 position.set(localX - CHUNK_SIZE * 0.5, groundY + 5.5, localZ - CHUNK_SIZE * 0.5);
@@ -1343,52 +1298,6 @@
             leaves.castShadow = true;
             chunkGroup.add(leaves, trunks);
             return colliders;
-        }
-
-        function createRiverChunkMesh(chunkX, chunkZ, group) {
-            const originX = chunkX * CHUNK_SIZE;
-            const originZ = chunkZ * CHUNK_SIZE;
-            const samples = 52;
-            const positions = [];
-            const indices = [];
-
-            for (let i = 0; i <= samples; i++) {
-                const t = i / samples;
-                const z = originZ - CHUNK_SIZE * 0.5 + t * CHUNK_SIZE;
-                const centerX = getRiverCenterX(z);
-                const dx = getRiverCenterX(z + 1) - getRiverCenterX(z - 1);
-                const dz = 2;
-                const length = Math.hypot(dx, dz) || 1;
-                const nx = dz / length;
-                const nz = -dx / length;
-                const width = getRiverInfo(centerX, z).halfWidth;
-                const y = getRiverWaterHeight(z) + 0.035;
-
-                positions.push(
-                    centerX + nx * width - originX, y, z + nz * width - originZ,
-                    centerX - nx * width - originX, y, z - nz * width - originZ
-                );
-
-                if (i < samples) {
-                    const middleZ = z + CHUNK_SIZE / samples * 0.5;
-                    const middleX = getRiverCenterX(middleZ);
-                    const crossesRoad = getNearestRoadPoint(middleX, middleZ).distance < ROAD_WIDTH * 0.5 + 1.5;
-                    if (!crossesRoad) {
-                        const a = i * 2;
-                        indices.push(a, a + 2, a + 1, a + 1, a + 2, a + 3);
-                    }
-                }
-            }
-
-            const geometry = new THREE.BufferGeometry();
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-            geometry.setIndex(indices);
-            geometry.computeVertexNormals();
-            const water = new THREE.Mesh(geometry, riverMaterial);
-            water.position.set(originX, 0, originZ);
-            water.frustumCulled = false;
-            water.renderOrder = 1;
-            group.add(water);
         }
 
         function createTerrainChunk(chunkX, chunkZ, lod) {
@@ -1428,7 +1337,6 @@
             const mesh = new THREE.Mesh(geometry, terrainMaterial);
             mesh.receiveShadow = true;
             group.add(mesh);
-            createRiverChunkMesh(chunkX, chunkZ, group);
             group.userData.colliders = createChunkTrees(chunkX, chunkZ, group);
             group.userData.lod = lod;
             scene.add(group);
@@ -1542,7 +1450,7 @@
 
         function updatePhysics(delta) {
             const p = vehiclePhysics;
-            const canDrive = fuelLevel > 0 && !isQuizOpen && !isHydrolocked;
+            const canDrive = fuelLevel > 0 && !isQuizOpen;
 
             let accelForce = 0;
             if (canDrive && keys.forward) {
@@ -1609,14 +1517,6 @@
                     lastCollisionSoundTime = now;
                 }
             }
-            if (!isHydrolocked && isInDeepRiver(car.position.x, car.position.z)) {
-                isHydrolocked = true;
-                p.speed = 0;
-                keys.forward = false;
-                keys.backward = false;
-                document.getElementById('engine-warning').classList.remove('hidden');
-                playCollisionSound();
-            }
             car.position.y = getTerrainHeight(car.position.x, car.position.z) + 0.1;
 
             // Sample the ground in front of and behind the car to follow hill slopes.
@@ -1671,14 +1571,6 @@
 
         }
 
-        function isInDeepRiver(x, z) {
-            const river = getRiverInfo(x, z);
-            if (river.distance > river.halfWidth || getNearestRoadPoint(x, z).distance <= ROAD_WIDTH * 0.5 + 3) {
-                return false;
-            }
-            return getRawTerrainHeight(x, z) < river.waterHeight + 0.25;
-        }
-
         function collidesWithTree(startX, startZ, endX, endZ) {
             const dx = endX - startX;
             const dz = endZ - startZ;
@@ -1722,8 +1614,6 @@
             vehiclePhysics.surfaceRoll = 0;
             Object.keys(keys).forEach((key) => { keys[key] = false; });
             if (carModelGroup) carModelGroup.rotation.set(0, 0, 0);
-            isHydrolocked = false;
-            document.getElementById('engine-warning').classList.add('hidden');
             isQuizOpen = false;
             document.getElementById('quiz-modal').classList.add('hidden');
             fuelLevel = 100;
