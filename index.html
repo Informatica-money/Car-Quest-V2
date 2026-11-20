@@ -733,7 +733,9 @@
             pitchOffset: 0,
             rollOffset: 0,
             surfacePitch: 0,
-            surfaceRoll: 0
+            surfaceRoll: 0,
+            verticalVelocity: 0,
+            airborne: false
         };
 
         function initScene() {
@@ -1517,7 +1519,6 @@
                     lastCollisionSoundTime = now;
                 }
             }
-            car.position.y = getTerrainHeight(car.position.x, car.position.z) + 0.1;
 
             // Sample the ground in front of and behind the car to follow hill slopes.
             const forwardX = car.position.x - Math.sin(car.rotation.y) * 3;
@@ -1528,9 +1529,49 @@
                 getTerrainHeight(forwardX, forwardZ) - getTerrainHeight(rearX, rearZ),
                 6
             );
-            p.surfacePitch += (THREE.MathUtils.clamp(slopePitch, -0.55, 0.55) - p.surfacePitch)
-                * (1 - Math.exp(-delta * 5));
-            car.rotation.x = p.surfacePitch;
+
+            const groundY = getTerrainHeight(car.position.x, car.position.z) + 0.1;
+
+            if (!p.airborne) {
+                const nearAheadX = car.position.x - Math.sin(car.rotation.y) * 7;
+                const nearAheadZ = car.position.z - Math.cos(car.rotation.y) * 7;
+                const farAheadX = car.position.x - Math.sin(car.rotation.y) * 14;
+                const farAheadZ = car.position.z - Math.cos(car.rotation.y) * 14;
+                const nearGroundY = getTerrainHeight(nearAheadX, nearAheadZ);
+                const farGroundY = getTerrainHeight(farAheadX, farAheadZ);
+                const crestDrop = nearGroundY - farGroundY;
+                const speedMS = Math.abs(p.speed);
+
+                if (speedMS > 12 && crestDrop > 1.0
+                    && nearGroundY > groundY
+                    && slopePitch < -0.08) {
+                    p.airborne = true;
+                    p.verticalVelocity = speedMS * 0.55;
+                }
+            }
+
+            if (p.airborne) {
+                p.verticalVelocity -= 22 * delta;
+                car.position.y += p.verticalVelocity * delta;
+
+                if (car.position.y <= groundY) {
+                    car.position.y = groundY;
+                    p.verticalVelocity = 0;
+                    p.airborne = false;
+                }
+            } else {
+                car.position.y = groundY;
+            }
+
+            if (!p.airborne) {
+                p.surfacePitch += (THREE.MathUtils.clamp(slopePitch, -0.55, 0.55) - p.surfacePitch)
+                    * (1 - Math.exp(-delta * 5));
+                car.rotation.x = p.surfacePitch;
+            } else {
+                const flightPitch = THREE.MathUtils.clamp(slopePitch - p.verticalVelocity * 0.018, -0.55, 0.55);
+                p.surfacePitch += (flightPitch - p.surfacePitch) * (1 - Math.exp(-delta * 2));
+                car.rotation.x = p.surfacePitch;
+            }
 
             const rightX = Math.cos(car.rotation.y);
             const rightZ = -Math.sin(car.rotation.y);
@@ -1612,6 +1653,8 @@
             vehiclePhysics.rollOffset = 0;
             vehiclePhysics.surfacePitch = 0;
             vehiclePhysics.surfaceRoll = 0;
+            vehiclePhysics.verticalVelocity = 0;
+            vehiclePhysics.airborne = false;
             Object.keys(keys).forEach((key) => { keys[key] = false; });
             if (carModelGroup) carModelGroup.rotation.set(0, 0, 0);
             isQuizOpen = false;
