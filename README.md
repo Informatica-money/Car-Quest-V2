@@ -1,24 +1,21 @@
-# Car-Quest-V2
+# Enhanced Vite React TypeScript Template
 
-mooie educatief spel met rijdende auto 
-voor leerlingen van het voortgezet onderwijs 
+Vite + React + TypeScript + Tailwind CSS template with Shadcn/ui pre-configured.
 
-| Naam | Rol | GitHub-gebruikersnaam |
+## Features
 
-| pim | Manager 
-|pim | Marketing 
-| sam | Developer 
-|flo | Designer 
+- **Linting**: TypeScript (`tsc --noEmit`), ESLint, and Stylelint
+- **Shadcn/ui**: Pre-configured with all Shadcn components
+- **Modern Stack**: Vite + React + TypeScript + Tailwind CSS
 
----
+## Available Scripts
 
-## 📁 Projectstructuur
-- `README.md` – Projectoverzicht en teaminformatie
-- `index.html` – Prototype van de landingspagina
+```bash
+# Run all linting (types + JS + CSS)
+npm run lint
 
----
-
-## 🛠️ Gebruik
-1. Clone de repository:
-   ```bash
-   git clone [https://github.com/](https://github.com/)[organisatie-of-gebruiker]/[repository-naam].git
+# Individual linting
+npm run lint:types # TypeScript (tsc --noEmit)
+npm run lint:js    # ESLint
+npm run lint:css   # Stylelint
+```
